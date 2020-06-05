@@ -1,5 +1,5 @@
 numpy>=1.18.0
 scipy>=1.4.0
 tensorflow>=2.0.0
-tensornetwork>=0.0.1
+tensornetwork>=0.4.0
 tqdm>=4.46.0
