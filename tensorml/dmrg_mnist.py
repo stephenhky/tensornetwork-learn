@@ -14,6 +14,7 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
         self.nblabels = nblabels
         self.m = bond_len
         self.unihigh = unihigh
+        self.construct_tensornetwork()
 
     def construct_tensornetwork(self):
         self.mps_tf_vars = [None] * self.dimvec
@@ -68,36 +69,14 @@ class QuantumTensorNetworkClassifier(ExperimentalClassifier):
         self.m = m
         self.unihigh = unihigh
 
-    def construct_tensornetwork(self):
-        # model nodes
-        self.nodes = [
-            tn.Node(np.random.uniform(high=self.unihigh, size=(2, self.m)), name='node{}'.format(i))
-                 if i == 0 or i == self.dimvec - 1
-                 else tn.Node(np.random.uniform(high=self.unihigh, size=(2, self.m, self.m)), name='node{}'.format(i))
-                 for i in range(self.dimvec)
-        ]
-        self.nodes[self.pos_label] = tn.Node(np.random.uniform(high=self.unihigh,
-                                                               size=(2, self.m, self.m, self.nblabels)),
-                                             name='label_node')
-
-        # input nodes (initialization)
-        cosx = np.random.uniform(size=self.dimvec)
-        self.input_nodes = [
-            tn.Node(np.array([cosx[i], np.sqrt(1 - cosx[i] * cosx[i])]), name='input{}'.format(i))
-            for i in range(self.dimvec)
-        ]
-
-    def connect_edges(self):
-        self.edges = [self.nodes[0][1] ^ self.nodes[1][1]]
-        for i in range(1, self.dimvec - 1):
-            self.edges.append(self.nodes[i][2] ^ self.nodes[i + 1][1])
-
-        self.input_edges = [self.nodes[i][0] ^ self.input_nodes[i][0]
-                            for i in range(self.dimvec)]
-
     def fit(self, X, Y, *args, **kwargs):
         self.dimvec = X.shape[1]
         self.nblabels = Y.shape[1]
+
+        self.quantum_dmrg_model = tf.keras.Sequential(
+            tf.keras.Input(shape=(None, 784, 2)),
+            QuantumDMRGLayer(dimvec=784, pos_label=392, nblabels=10, bond_len=20, unihigh=0.05)
+        )
         pass
 
     def fit_batch(self, dataset, *args, **kwargs):
