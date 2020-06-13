@@ -1,4 +1,6 @@
 
+from functools import partial
+
 import numpy as np
 import tensorflow as tf
 import tensornetwork as tn
@@ -17,26 +19,30 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
         self.construct_tensornetwork()
 
     def construct_tensornetwork(self):
+        end_node = lambda i: tf.Variable(tf.random.uniform(shape=(2, self.m),
+                                                           minval=0,
+                                                           maxval=self.unihigh),
+                                         name='mps_node_{}'.format(i),
+                                         trainable=True)
+
+        label_node = lambda i: tf.Variable(tf.random.uniform(shape=(2, self.m, self.m, self.nblabels),
+                                                             minval=0,
+                                                             maxval=self.unihigh),
+                                           name='mps_node_{}'.format(i),
+                                           trainable=True)
+        normal_node = lambda i: tf.Variable(tf.random.uniform(shape=(2, self.m, self.m),
+                                                              minval=0,
+                                                              maxval=self.unihigh),
+                                            name='mps_node_{}'.format(i),
+                                            trainable=True)
+
         self.mps_tf_vars = [None] * self.dimvec
         for i in range(self.dimvec):
-            if i == 0 or i == self.dimvec - 1:
-                self.mps_tf_vars[i] = tf.Variable(tf.random.uniform(shape=(2, self.m),
-                                                                    minval=0,
-                                                                    maxval=self.unihigh),
-                                                  name='mps_node_{}'.format(i),
-                                                  trainable=True)
-            elif i == self.pos_label:
-                self.mps_tf_vars[i] = tf.Variable(tf.random.uniform(shape=(2, self.m, self.m, self.nblabels),
-                                                                    minval=0,
-                                                                    maxval=self.unihigh),
-                                                  name='mps_node_{}'.format(i),
-                                                  trainable=True)
-            else:
-                self.mps_tf_vars[i] = tf.Variable(tf.random.uniform(shape=(2, self.m, self.m),
-                                                                    minval=0,
-                                                                    maxval=self.unihigh),
-                                                  name='mps_node_{}'.format(i),
-                                                  trainable=True)
+            self.mps_tf_vars[i] = tf.case(
+                [(tf.math.logical_or(tf.math.equal(i, 0), tf.math.equal(i, self.dimvec - 1)), partial(end_node, i=i)),
+                 (tf.math.equal(i, self.pos_label), partial(label_node, i=i))],
+                default=partial(normal_node, i=i)
+                )
 
         # model nodes
         self.nodes = [
@@ -44,16 +50,28 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
             for i in range(self.dimvec)
         ]
 
+        # input nodes
+        cosx = np.random.uniform(size=self.dimvec)
+        self.input_nodes = [
+            tn.Node(np.array([cosx[i], np.sqrt(1 - cosx[i] * cosx[i])]), name='input{}'.format(i), backend='tensorflow')
+            for i in range(self.dimvec)]
+
+    @tf.function
     def infer_single_datum(self, input):
-        input_nodes = [tn.Node(input[i]) for i in range(self.dimvec)]
+        for i in range(self.dimvec):
+            self.input_nodes[i].tensor = input[i, :]
         edges = [self.nodes[0][1] ^ self.nodes[1][1]]
         for i in range(1, self.dimvec - 1):
             edges.append(self.nodes[i][2] ^ self.nodes[i + 1][1])
 
-        input_edges = [self.nodes[i][0] ^ input_nodes[i][0] for i in range(self.dimvec)]
+        input_edges = [self.nodes[i][0] ^ self.input_nodes[i][0] for i in range(self.dimvec)]
 
-        final_node = tn.contractors.auto(self.nodes + input_nodes,
-                                         output_edge_order=[self.nodes[self.pos_label][3]])
+        final_node = tn.contractors.greedy(self.nodes + self.input_nodes,
+                                           output_edge_order=[self.nodes[self.pos_label][3]])
+        # final_node = self.nodes[0] @ self.nodes[1]
+        # for node in self.nodes[2:]+self.input_nodes:
+        #     final_node = final_node @ node
+
         return final_node.tensor
 
     def call(self, inputs):
@@ -69,20 +87,30 @@ class QuantumTensorNetworkClassifier(ExperimentalClassifier):
         self.m = m
         self.unihigh = unihigh
 
+        self.trained = False
+
     def fit(self, X, Y, *args, **kwargs):
         self.dimvec = X.shape[1]
         self.nblabels = Y.shape[1]
 
-        self.quantum_dmrg_model = tf.keras.Sequential(
-            tf.keras.Input(shape=(None, 784, 2)),
-            QuantumDMRGLayer(dimvec=784, pos_label=392, nblabels=10, bond_len=20, unihigh=0.05)
-        )
+        self.quantum_dmrg_model = tf.keras.Sequential([
+            tf.keras.Input(shape=(self.dimvec, 2)),
+            QuantumDMRGLayer(dimvec=self.dimvec,
+                             pos_label=self.pos_label,
+                             nblabels=self.nblabels,
+                             bond_len=self.m,
+                             unihigh=self.unihigh),
+            tf.keras.layers.Softmax()
+        ])
         pass
 
     def fit_batch(self, dataset, *args, **kwargs):
         pass
 
     def predict_proba(self, X, *args, **kwargs):
+        if not self.trained:
+            raise Exception('Model not trained!')
+
         assert X.shape[1] == self.dimvec
 
         nbdata = X.shape[0]
