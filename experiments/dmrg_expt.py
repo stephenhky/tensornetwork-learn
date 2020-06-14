@@ -22,7 +22,9 @@ def convert_pixels_to_tnvector(pixels):
 
 
 def convert_pixels(datum):
-    datum['pixels'] = convert_pixels_to_tnvector(datum['pixels'])
+    # datum['pixels'] = [list(l) for l in convert_pixels_to_tnvector(np.array(datum['pixels']))]
+    for i, pixel in enumerate(convert_pixels_to_tnvector(np.array([datum['pixels']]))):
+        datum['pixel{}'.format(i)] = list(pixel)
     return datum
 
 
