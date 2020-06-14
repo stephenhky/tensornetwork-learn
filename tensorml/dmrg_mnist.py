@@ -80,12 +80,13 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
 
 
 class QuantumTensorNetworkClassifier(ExperimentalClassifier):
-    def __init__(self, pos_label, m, unihigh=0.05):
+    def __init__(self, pos_label, m, unihigh=0.05, optimizer='adam'):
         self.dimvec = None
         self.pos_label = pos_label
         self.nblabels = None
         self.m = m
         self.unihigh = unihigh
+        self.optimizer = optimizer
 
         self.trained = False
 
@@ -102,10 +103,17 @@ class QuantumTensorNetworkClassifier(ExperimentalClassifier):
                              unihigh=self.unihigh),
             tf.keras.layers.Softmax()
         ])
-        pass
+        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
+        self.quantum_dmrg_model.compile(optimizer=self.optimizer, loss=loss_fn)
+        self.quantum_dmrg_model.fit(X, Y)
 
     def fit_batch(self, dataset, *args, **kwargs):
-        pass
+        X = None
+        Y = None
+        for x_batch, y_batch in dataset:
+            X = x_batch if X is None else np.append(X, x_batch, axis=0)
+            Y = y_batch if Y is None else np.append(Y, y_batch, axis=0)
+        self.fit(X, Y, *args, **kwargs)
 
     def predict_proba(self, X, *args, **kwargs):
         if not self.trained:
@@ -131,7 +139,10 @@ class QuantumTensorNetworkClassifier(ExperimentalClassifier):
         return predy
 
     def predict_proba_batch(self, dataset, *args, **kwargs):
-        pass
+        X = None
+        for x_batch, _ in dataset:
+            X = x_batch if X is None else np.append(X, x_batch, axis=0)
+        return self.predict_proba(X, *args, **kwargs)
 
     def persist(self, path):
         pass
