@@ -3,7 +3,8 @@ import json
 
 import numpy as np
 import numba
-from mlexpt.experiment import run_experiment
+from mlexpt.experiment import add_multiple_features, run_experiment
+from tensorml.dmrg_mnist import QuantumTensorNetworkClassifier
 
 
 def generate_data(mnist_file):
@@ -19,5 +20,16 @@ def convert_pixels_to_tnvector(pixels):
     tnvector = np.array([pixels/256., np.sqrt(1-(pixels/256.)*(pixels/256.))]).T
     return tnvector
 
+
+def convert_pixels(datum):
+    datum['pixels'] = convert_pixels_to_tnvector(datum['pixels'])
+    return datum
+
+
 if __name__ == '__main__':
-    pass
+    feature_adder = add_multiple_features([convert_pixels])
+    config = json.load(open('dmrg_mnist_config.json', 'r'))
+
+    run_experiment(config,
+                   feature_adder=feature_adder,
+                   model_class=QuantumTensorNetworkClassifier)

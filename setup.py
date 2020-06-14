@@ -17,7 +17,7 @@ def package_description():
 
 
 setup(name='tensornetwork-learn',
-      version="0.0.1",
+      version="0.0.1a01",
       description="Machine Learning using Tensor Networks",
       long_description=package_description(),
       long_description_content_type='text/markdown',
