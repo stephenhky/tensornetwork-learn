@@ -3,8 +3,11 @@ import json
 
 import numpy as np
 import numba
-from mlexpt.experiment import add_multiple_features, run_experiment
-from tensorml.dmrg_mnist import QuantumTensorNetworkClassifier
+import tensorflow as tf
+# from mlexpt.experiment import add_multiple_features, run_experiment
+
+# from tensorml.dmrg_mnist import QuantumTensorNetworkClassifier
+from tensorml.dmrg_mnist import QuantumDMRGLayer
 
 
 def generate_data(mnist_file):
@@ -28,11 +31,65 @@ def convert_pixels(datum):
     return datum
 
 
-if __name__ == '__main__':
-    feature_adder = add_multiple_features([convert_pixels])
-    config = json.load(open('dmrg_mnist_config.json', 'r'))
-    config['model']['quantitative_features'] = ['pixel{}'.format(i) for i in range(784)]
+def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, unihigh=0.05, optimizer='adam'):
+    quantum_dmrg_model = tf.keras.Sequential([
+        tf.keras.Input(shape=(dimvec, 2)),
+        QuantumDMRGLayer(dimvec=dimvec,
+                         pos_label=pos_label,
+                         nblabels=nblabels,
+                         bond_len=bond_len,
+                         unihigh=unihigh),
+        tf.keras.layers.Softmax()
+    ])
+    quantum_dmrg_model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy())
+    return quantum_dmrg_model
 
-    run_experiment(config,
-                   feature_adder=feature_adder,
-                   model_class=QuantumTensorNetworkClassifier)
+
+if __name__ == '__main__':
+    dimvec = 784
+    pos_label = 392
+    nblabels = 10
+    bond_len = 20
+    nbdata = 70000
+    cv_fold = 5
+
+    # Prepare for cross-validation
+    cv_labels = np.random.choice(list(range(cv_fold)), size=nbdata)
+
+    # Reading the data
+    label_dict = {str(i): i for i in range(10)}
+    X = np.zeros((nbdata, dimvec, 2))
+    Y = np.zeros((nbdata, nblabels))
+    for i, (pixels, label) in generate_data(open('mnist_784/mnist_784.json', 'r')):
+        X[i, :, :] = convert_pixels_to_tnvector(pixels)
+        Y[i, label_dict[label]] = 1.
+
+    # cross_validation
+    accuracies = []
+    for cv_idx in range(cv_fold):
+        print('Round {}'.format(cv_idx))
+        trainX = X[cv_labels!=cv_fold, :, :]
+        trainY = Y[cv_labels!=cv_fold, :]
+        testX = X[cv_labels==cv_fold, :, :]
+        testY = Y[cv_labels==cv_fold, :]
+
+        # Initializing Keras model
+        print('Initializing Keras model...')
+        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len)
+
+        # Training
+        print('Training')
+        quantum_dmrg_model.fit(trainX, trainY)
+
+        # Testing
+        print('Testing')
+        predictedY = quantum_dmrg_model.predict(testX)
+        cross_entropy = - np.sum(testY*np.log(predictedY), axis=1)
+        print('Cross-entropy = {}'.format(cross_entropy))
+        nbmatches = np.sum(np.argmax(testY, axis=1) == np.argmax(predictedY, axis=1))
+        print('Number of matches = {}'.format(nbmatches))
+        print('Accuracy = {.2f}%'.format(nbmatches/nbdata*100))
+
+        accuracies.append(nbmatches/nbdata)
+
+    print('Average accuracy = {.2f}%'.format(np.mean(accuracies)*100))
