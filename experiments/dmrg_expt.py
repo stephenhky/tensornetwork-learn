@@ -73,6 +73,9 @@ if __name__ == '__main__':
         testX = X[cv_labels==cv_fold, :, :]
         testY = Y[cv_labels==cv_fold, :]
 
+        print(trainX.shape)
+        print(trainY.shape)
+
         # Initializing Keras model
         print('Initializing Keras model...')
         quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len)
