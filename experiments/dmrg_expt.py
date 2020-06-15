@@ -41,7 +41,7 @@ def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, unihigh=0.05, optim
                          unihigh=unihigh),
         tf.keras.layers.Softmax()
     ])
-    quantum_dmrg_model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy())
+    quantum_dmrg_model.compile(optimizer=optimizer, loss=tf.keras.losses.CategoricalCrossentropy())
     return quantum_dmrg_model
 
 
