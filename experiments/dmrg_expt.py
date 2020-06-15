@@ -54,7 +54,7 @@ if __name__ == '__main__':
     nbdata = 70000
 
     # training and CV parameters
-    nb_epochs = 10
+    nb_epochs = 2
     cv_fold = 5
 
     # Prepare for cross-validation
