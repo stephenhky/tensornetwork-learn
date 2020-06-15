@@ -97,8 +97,8 @@ if __name__ == '__main__':
         print('Cross-entropy = {}'.format(cross_entropy))
         nbmatches = np.sum(np.argmax(testY, axis=1) == np.argmax(predictedY, axis=1))
         print('Number of matches = {}'.format(nbmatches))
-        print('Accuracy = {.2f}%'.format(nbmatches/nbdata*100))
+        print('Accuracy = {:.2f}%'.format(nbmatches/nbdata*100))
 
         accuracies.append(nbmatches/nbdata)
 
-    print('Average accuracy = {.2f}%'.format(np.mean(accuracies)*100))
+    print('Average accuracy = {:.2f}%'.format(np.mean(accuracies)*100))
