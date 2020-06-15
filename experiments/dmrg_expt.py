@@ -46,15 +46,19 @@ def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, unihigh=0.05, optim
 
 
 if __name__ == '__main__':
+    # model parameters
     dimvec = 784
     pos_label = 392
     nblabels = 10
     bond_len = 20
     nbdata = 70000
+
+    # training and CV parameters
+    nb_epochs = 10
     cv_fold = 5
 
     # Prepare for cross-validation
-    cv_labels = np.random.choice(list(range(cv_fold)), size=nbdata)
+    cv_labels = np.random.choice(range(cv_fold), size=nbdata)
 
     # Reading the data
     label_dict = {str(i): i for i in range(10)}
@@ -68,13 +72,15 @@ if __name__ == '__main__':
     accuracies = []
     for cv_idx in range(cv_fold):
         print('Round {}'.format(cv_idx))
-        trainX = X[cv_labels!=cv_fold, :, :]
-        trainY = Y[cv_labels!=cv_fold, :]
-        testX = X[cv_labels==cv_fold, :, :]
-        testY = Y[cv_labels==cv_fold, :]
+        trainX = X[cv_labels!=cv_idx, :, :]
+        trainY = Y[cv_labels!=cv_idx, :]
+        testX = X[cv_labels==cv_idx, :, :]
+        testY = Y[cv_labels==cv_idx, :]
 
         print(trainX.shape)
         print(trainY.shape)
+        print(testX.shape)
+        print(testY.shape)
 
         # Initializing Keras model
         print('Initializing Keras model...')
@@ -82,7 +88,7 @@ if __name__ == '__main__':
 
         # Training
         print('Training')
-        quantum_dmrg_model.fit(trainX, trainY)
+        quantum_dmrg_model.fit(trainX, trainY, epochs=nb_epochs)
 
         # Testing
         print('Testing')
