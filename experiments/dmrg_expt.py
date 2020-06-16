@@ -4,6 +4,7 @@ import json
 import numpy as np
 import numba
 import tensorflow as tf
+import tensornetwork as tn
 # from mlexpt.experiment import add_multiple_features, run_experiment
 
 # from tensorml.dmrg_mnist import QuantumTensorNetworkClassifier
