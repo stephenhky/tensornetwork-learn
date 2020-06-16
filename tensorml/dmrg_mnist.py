@@ -16,67 +16,47 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
         self.nblabels = nblabels
         self.m = bond_len
         self.unihigh = unihigh
-        self.construct_tensornetwork()
 
-    def construct_tensornetwork(self):
-        end_node = lambda i: tf.Variable(tf.random.uniform(shape=(2, self.m),
-                                                           minval=0,
-                                                           maxval=self.unihigh),
-                                         name='mps_node_{}'.format(i),
-                                         trainable=True)
+        self.mps_tensors = [tf.Variable(tf.random.uniform(shape=self.mps_tensor_shape(i),
+                                                          minval=0,
+                                                          maxval=self.unihigh),
+                                        trainable=True,
+                                        name='mps_tensors_{}'.format(i))
+                            for i in range(self.dimvec)]
 
-        label_node = lambda i: tf.Variable(tf.random.uniform(shape=(2, self.m, self.m, self.nblabels),
-                                                             minval=0,
-                                                             maxval=self.unihigh),
-                                           name='mps_node_{}'.format(i),
-                                           trainable=True)
-        normal_node = lambda i: tf.Variable(tf.random.uniform(shape=(2, self.m, self.m),
-                                                              minval=0,
-                                                              maxval=self.unihigh),
-                                            name='mps_node_{}'.format(i),
-                                            trainable=True)
+    def mps_tensor_shape(self, idx):
+        if idx == 0 or idx == self.dimvec - 1:
+            return (2, self.dimvec)
+        elif idx == self.pos_label:
+            return (2, self.dimvec, self.dimvec, self.nblabels)
+        else:
+            return (2, self.dimvec, self.dimvec)
 
-        self.mps_tf_vars = [None] * self.dimvec
-        for i in range(self.dimvec):
-            self.mps_tf_vars[i] = tf.case(
-                [(tf.math.logical_or(tf.math.equal(i, 0), tf.math.equal(i, self.dimvec - 1)), partial(end_node, i=i)),
-                 (tf.math.equal(i, self.pos_label), partial(label_node, i=i))],
-                default=partial(normal_node, i=i)
-                )
+    def infer_single(self, input):
+        assert input.shape[0] == self.dimvec
+        assert input.shape[1] == 2
 
-        # model nodes
-        self.nodes = [
-            tn.Node(self.mps_tf_vars[i], name='node{}'.format(i), backend='tensorflow')
+        nodes = [
+            tn.Node(self.mps_tensors[i], backend='tensorflow')
+            for i in range(self.dimvec)
+        ]
+        input_nodes = [
+            tn.Node(input[i, :], backend='tensorflow')
             for i in range(self.dimvec)
         ]
 
-        # input nodes
-        cosx = np.random.uniform(size=self.dimvec)
-        self.input_nodes = [
-            tn.Node(np.array([cosx[i], np.sqrt(1 - cosx[i] * cosx[i])]), name='input{}'.format(i), backend='tensorflow')
-            for i in range(self.dimvec)]
-
-    @tf.function
-    def infer_single_datum(self, input):
         for i in range(self.dimvec):
-            self.input_nodes[i].tensor = input[i, :]
-        edges = [self.nodes[0][1] ^ self.nodes[1][1]]
+            nodes[i][0] ^ input_nodes[i][0]
+        nodes[0][1] ^ nodes[1][1]
         for i in range(1, self.dimvec - 1):
-            edges.append(self.nodes[i][2] ^ self.nodes[i + 1][1])
+            nodes[i][2] ^ nodes[i + 1][1]
 
-        input_edges = [self.nodes[i][0] ^ self.input_nodes[i][0] for i in range(self.dimvec)]
-
-        final_node = tn.contractors.greedy(self.nodes + self.input_nodes,
-                                           output_edge_order=[self.nodes[self.pos_label][3]])
-        # final_node = self.nodes[0] @ self.nodes[1]
-        # for node in self.nodes[2:]+self.input_nodes:
-        #     final_node = final_node @ node
-
+        final_node = tn.contractors.auto(nodes + input_nodes,
+                                         output_edge_order=[nodes[self.pos_label][3]])
         return final_node.tensor
 
     def call(self, inputs):
-        return tf.vectorized_map(self.infer_single_datum, inputs)
-
+        return tf.vectorized_map(self.infer_single, inputs)
 
 
 class QuantumTensorNetworkClassifier(ExperimentalClassifier):
@@ -103,7 +83,7 @@ class QuantumTensorNetworkClassifier(ExperimentalClassifier):
                              unihigh=self.unihigh),
             tf.keras.layers.Softmax()
         ])
-        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
+        loss_fn = tf.keras.losses.CategoricalCrossentropy()
         self.quantum_dmrg_model.compile(optimizer=self.optimizer, loss=loss_fn)
         self.quantum_dmrg_model.fit(X, Y)
 
