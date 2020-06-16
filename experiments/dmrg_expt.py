@@ -139,6 +139,8 @@ if __name__ == '__main__':
         print('Initializing Keras model...')
         quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len)
 
+        print(quantum_dmrg_model.summary())
+
         # Training
         print('Training')
         quantum_dmrg_model.fit(trainX, trainY, epochs=nb_epochs)
