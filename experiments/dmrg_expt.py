@@ -7,7 +7,59 @@ import tensorflow as tf
 # from mlexpt.experiment import add_multiple_features, run_experiment
 
 # from tensorml.dmrg_mnist import QuantumTensorNetworkClassifier
-from tensorml.dmrg_mnist import QuantumDMRGLayer
+# from tensorml.dmrg_mnist import QuantumDMRGLayer
+
+
+class QuantumDMRGLayer(tf.keras.layers.Layer):
+    def __init__(self, dimvec, pos_label, nblabels, bond_len, unihigh):
+        super(QuantumDMRGLayer, self).__init__()
+        self.dimvec = dimvec
+        self.pos_label = pos_label
+        self.nblabels = nblabels
+        self.m = bond_len
+        self.unihigh = unihigh
+
+        self.mps_tensors = [tf.Variable(tf.random.uniform(shape=self.mps_tensor_shape(i),
+                                                          minval=0,
+                                                          maxval=self.unihigh),
+                                        trainable=True,
+                                        name='mps_tensors_{}'.format(i))
+                            for i in range(self.dimvec)]
+
+    def mps_tensor_shape(self, idx):
+        if idx == 0 or idx == self.dimvec - 1:
+            return (2, self.dimvec)
+        elif idx == self.pos_label:
+            return (2, self.dimvec, self.dimvec, self.nblabels)
+        else:
+            return (2, self.dimvec, self.dimvec)
+
+    def infer_single(self, input):
+        assert input.shape[0] == self.dimvec
+        assert input.shape[1] == 2
+
+        nodes = [
+            tn.Node(self.mps_tensors[i], backend='tensorflow')
+            for i in range(self.dimvec)
+        ]
+        input_nodes = [
+            tn.Node(input[i, :], backend='tensorflow')
+            for i in range(self.dimvec)
+        ]
+
+        for i in range(self.dimvec):
+            nodes[i][0] ^ input_nodes[i][0]
+        nodes[0][1] ^ nodes[1][1]
+        for i in range(1, self.dimvec - 1):
+            nodes[i][2] ^ nodes[i + 1][1]
+
+        final_node = tn.contractors.auto(nodes + input_nodes,
+                                         output_edge_order=[nodes[self.pos_label][3]])
+        return final_node.tensor
+
+    def call(self, inputs):
+        return tf.vectorized_map(self.infer_single, inputs)
+
 
 
 def generate_data(mnist_file):
@@ -54,7 +106,7 @@ if __name__ == '__main__':
     nbdata = 70000
 
     # training and CV parameters
-    nb_epochs = 2
+    nb_epochs = 10
     cv_fold = 5
 
     # Prepare for cross-validation
