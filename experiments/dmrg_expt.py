@@ -29,11 +29,11 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
 
     def mps_tensor_shape(self, idx):
         if idx == 0 or idx == self.dimvec - 1:
-            return (2, self.dimvec)
+            return (2, self.m)
         elif idx == self.pos_label:
-            return (2, self.dimvec, self.dimvec, self.nblabels)
+            return (2, self.m, self.m, self.nblabels)
         else:
-            return (2, self.dimvec, self.dimvec)
+            return (2, self.m, self.m)
 
     def infer_single(self, input):
         assert input.shape[0] == self.dimvec
