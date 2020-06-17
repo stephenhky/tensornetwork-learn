@@ -103,7 +103,7 @@ if __name__ == '__main__':
     dimvec = 784
     pos_label = 392
     nblabels = 10
-    bond_len = 20
+    bond_len = 10
     nbdata = 70000
 
     # training and CV parameters
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
         # Initializing Keras model
         print('Initializing Keras model...')
-        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len)
+        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, unihigh=0.025)
 
         print(quantum_dmrg_model.summary())
 
