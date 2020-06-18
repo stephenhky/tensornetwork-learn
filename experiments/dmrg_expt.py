@@ -89,14 +89,14 @@ def convert_pixels(datum):
     return datum
 
 
-def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, unihigh=0.05, optimizer='adam'):
+def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9, optimizer='adam'):
     quantum_dmrg_model = tf.keras.Sequential([
         tf.keras.Input(shape=(dimvec, 2)),
         QuantumDMRGLayer(dimvec=dimvec,
                          pos_label=pos_label,
                          nblabels=nblabels,
                          bond_len=bond_len,
-                         unihigh=unihigh),
+                         nearzero_std=nearzero_std),
         tf.keras.layers.Softmax()
     ])
     quantum_dmrg_model.compile(optimizer=optimizer, loss=tf.keras.losses.CategoricalCrossentropy())
