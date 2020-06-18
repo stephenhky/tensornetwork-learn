@@ -72,9 +72,13 @@ def generate_data(mnist_file):
         yield pixels, digit
 
 
-@numba.jit
+@numba.njit(numba.float64[:, :](numba.float64[:]))
 def convert_pixels_to_tnvector(pixels):
-    tnvector = np.array([pixels/256., np.sqrt(1-(pixels/256.)*(pixels/256.))]).T
+    tnvector = np.concatenate(
+        (np.expand_dims(pixels/256., axis=0),
+         np.expand_dims(np.sqrt(1-(pixels/256.)*(pixels/256.)), axis=0)),
+        axis=0
+    ).T
     return tnvector
 
 
@@ -137,7 +141,7 @@ if __name__ == '__main__':
 
         # Initializing Keras model
         print('Initializing Keras model...')
-        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, unihigh=0.025)
+        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len)
 
         print(quantum_dmrg_model.summary())
 
