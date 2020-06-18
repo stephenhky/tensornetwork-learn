@@ -141,7 +141,8 @@ if __name__ == '__main__':
 
         # Initializing Keras model
         print('Initializing Keras model...')
-        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, optimizer=optimizer)
 
         print(quantum_dmrg_model.summary())
 
