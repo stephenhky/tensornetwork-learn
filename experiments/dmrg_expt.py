@@ -12,28 +12,30 @@ import tensornetwork as tn
 
 
 class QuantumDMRGLayer(tf.keras.layers.Layer):
-    def __init__(self, dimvec, pos_label, nblabels, bond_len, unihigh):
+    def __init__(self, dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9):
         super(QuantumDMRGLayer, self).__init__()
         self.dimvec = dimvec
         self.pos_label = pos_label
         self.nblabels = nblabels
         self.m = bond_len
-        self.unihigh = unihigh
 
-        self.mps_tensors = [tf.Variable(tf.random.uniform(shape=self.mps_tensor_shape(i),
-                                                          minval=0,
-                                                          maxval=self.unihigh),
+        self.mps_tensors = [tf.Variable(self.mps_tensor_initial_values(i, nearzero_std=nearzero_std),
                                         trainable=True,
                                         name='mps_tensors_{}'.format(i))
                             for i in range(self.dimvec)]
 
-    def mps_tensor_shape(self, idx):
+    def mps_tensor_initial_values(self, idx, nearzero_std=1e-9):
         if idx == 0 or idx == self.dimvec - 1:
-            return (2, self.m)
+            tempmat = tf.eye(max(2, self.m))
+            return tempmat[0:2, :] if 2 < self.m else tempmat[:, 0:self.m]
         elif idx == self.pos_label:
-            return (2, self.m, self.m, self.nblabels)
+            return tf.random.normal((2, self.m, self.m, self.nblabels),
+                                    mean=0.0,
+                                    stddev=nearzero_std)
         else:
-            return (2, self.m, self.m)
+            return tf.random.normal((2, self.m, self.m),
+                                    mean=0.0,
+                                    stddev=nearzero_std)
 
     def infer_single(self, input):
         assert input.shape[0] == self.dimvec
@@ -60,7 +62,6 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
 
     def call(self, inputs):
         return tf.vectorized_map(self.infer_single, inputs)
-
 
 
 def generate_data(mnist_file):
@@ -109,6 +110,7 @@ if __name__ == '__main__':
     # training and CV parameters
     nb_epochs = 10
     cv_fold = 5
+    batch_size = 10
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
@@ -130,10 +132,8 @@ if __name__ == '__main__':
         testX = X[cv_labels==cv_idx, :, :]
         testY = Y[cv_labels==cv_idx, :]
 
-        print(trainX.shape)
-        print(trainY.shape)
-        print(testX.shape)
-        print(testY.shape)
+        print('Number of training data: {}'.format(trainX.shape[0]))
+        print('Number of test data: {}'.format(testX.shape[0]))
 
         # Initializing Keras model
         print('Initializing Keras model...')
@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
         # Training
         print('Training')
-        quantum_dmrg_model.fit(trainX, trainY, epochs=nb_epochs)
+        quantum_dmrg_model.fit(trainX, trainY, batch_size=batch_size, epochs=nb_epochs)
 
         # Testing
         print('Testing')
