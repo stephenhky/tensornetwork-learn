@@ -5,10 +5,6 @@ import numpy as np
 import numba
 import tensorflow as tf
 import tensornetwork as tn
-# from mlexpt.experiment import add_multiple_features, run_experiment
-
-# from tensorml.dmrg_mnist import QuantumTensorNetworkClassifier
-# from tensorml.dmrg_mnist import QuantumDMRGLayer
 
 
 class QuantumDMRGLayer(tf.keras.layers.Layer):
@@ -27,7 +23,8 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
     def mps_tensor_initial_values(self, idx, nearzero_std=1e-9):
         if idx == 0 or idx == self.dimvec - 1:
             tempmat = tf.eye(max(2, self.m))
-            return tempmat[0:2, :] if 2 < self.m else tempmat[:, 0:self.m]
+            mat = tempmat[0:2, :] if 2 < self.m else tempmat[:, 0:self.m]
+            return mat + tf.random.normal(mat.shape, mean=0.0, stddev=nearzero_std)
         elif idx == self.pos_label:
             return tf.random.normal((2, self.m, self.m, self.nblabels),
                                     mean=0.0,
@@ -75,8 +72,8 @@ def generate_data(mnist_file):
 @numba.njit(numba.float64[:, :](numba.float64[:]))
 def convert_pixels_to_tnvector(pixels):
     tnvector = np.concatenate(
-        (np.expand_dims(pixels/256., axis=0),
-         np.expand_dims(np.sqrt(1-(pixels/256.)*(pixels/256.)), axis=0)),
+        (np.expand_dims(np.cos(0.5*np.pi*pixels/256.), axis=0),
+         np.expand_dims(np.sin(0.5*np.pi*pixels/256.), axis=0)),
         axis=0
     ).T
     return tnvector
