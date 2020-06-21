@@ -115,6 +115,7 @@ if __name__ == '__main__':
     nb_epochs = 10
     cv_fold = 5
     batch_size = 10
+    std = 1e-4
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
@@ -141,7 +142,7 @@ if __name__ == '__main__':
 
         # Initializing Keras model
         print('Initializing Keras model...')
-        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len)
+        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, nearzero_std=std)
 
         print(quantum_dmrg_model.summary())
 
