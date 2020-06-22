@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --output=$HOME/tf_dmrg_output_%A.log
-#SBATCH --error=$HOME/tf_dmrg_error_%A.log
+#SBATCH --output=$HOME/tfgpu_dmrg_output.log
+#SBATCH --error=$HOME/tfgpu_dmrg_error.log
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:k80:1
 #SBATCH --mem=10g
