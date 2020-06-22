@@ -34,7 +34,7 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
             tempmat = tf.eye(max(2, self.m))
             mat = tempmat[0:2, :] if 2 < self.m else tempmat[:, 0:self.m]
             return mat + tf.random.normal(mat.shape, mean=0.0, stddev=nearzero_std)
-        elif self.isolated_label and idx == self.pos_label:
+        elif not self.isolated_label and idx == self.pos_label:
             return tf.random.normal((2, self.m, self.m, self.nblabels),
                                     mean=0.0,
                                     stddev=nearzero_std)
@@ -51,7 +51,8 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
             tn.Node(self.mps_tensors[i], backend='tensorflow')
             for i in range(self.dimvec)
         ]
-        output_node = tn.Node(self.output_tensor, backend='tensorflow')
+        if self.isolated_label:
+            output_node = tn.Node(self.output_tensor, backend='tensorflow')
         input_nodes = [
             tn.Node(input[i, :], backend='tensorflow')
             for i in range(self.dimvec)
