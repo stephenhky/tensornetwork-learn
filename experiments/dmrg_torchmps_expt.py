@@ -97,8 +97,8 @@ if __name__ == '__main__':
         print('Round {}'.format(cv_idx))
         dataset.change_subset(cv_idx, 'train')
 
-        mps = torchmps.torchmps.MPS(input_dim=dimvec, output_dim=nblabels, bond_dim=bond_len,
-                                    adaptive_mode=False, periodic_bc=False, label_site=pos_label)
+        mps = torchmps.MPS(input_dim=dimvec, output_dim=nblabels, bond_dim=bond_len,
+                           adaptive_mode=False, periodic_bc=False, label_site=pos_label)
 
         criterion = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(mps.parameters(), lr=learning_rate)

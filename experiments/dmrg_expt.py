@@ -8,24 +8,33 @@ import tensornetwork as tn
 
 
 class QuantumDMRGLayer(tf.keras.layers.Layer):
-    def __init__(self, dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9):
+    def __init__(self, dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9, isolated_labelnode=True):
         super(QuantumDMRGLayer, self).__init__()
         self.dimvec = dimvec
         self.pos_label = pos_label
         self.nblabels = nblabels
         self.m = bond_len
+        self.isolated_label = isolated_labelnode
+
+        assert self.pos_label >= 0 and self.pos_label < self.dimvec
 
         self.mps_tensors = [tf.Variable(self.mps_tensor_initial_values(i, nearzero_std=nearzero_std),
                                         trainable=True,
                                         name='mps_tensors_{}'.format(i))
                             for i in range(self.dimvec)]
+        if self.isolated_label:
+            self.output_tensor = tf.Variable(tf.random.normal((self.m, self.m, self.nblabels),
+                                                              mean=0.0,
+                                                              stddev=nearzero_std),
+                                             trainable=True,
+                                             name='mps_output_node')
 
     def mps_tensor_initial_values(self, idx, nearzero_std=1e-9):
         if idx == 0 or idx == self.dimvec - 1:
             tempmat = tf.eye(max(2, self.m))
             mat = tempmat[0:2, :] if 2 < self.m else tempmat[:, 0:self.m]
             return mat + tf.random.normal(mat.shape, mean=0.0, stddev=nearzero_std)
-        elif idx == self.pos_label:
+        elif self.isolated_label and idx == self.pos_label:
             return tf.random.normal((2, self.m, self.m, self.nblabels),
                                     mean=0.0,
                                     stddev=nearzero_std)
@@ -42,6 +51,7 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
             tn.Node(self.mps_tensors[i], backend='tensorflow')
             for i in range(self.dimvec)
         ]
+        output_node = tn.Node(self.output_tensor, backend='tensorflow')
         input_nodes = [
             tn.Node(input[i, :], backend='tensorflow')
             for i in range(self.dimvec)
@@ -49,12 +59,23 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
 
         for i in range(self.dimvec):
             nodes[i][0] ^ input_nodes[i][0]
-        nodes[0][1] ^ nodes[1][1]
-        for i in range(1, self.dimvec - 1):
-            nodes[i][2] ^ nodes[i + 1][1]
+        if self.isolated_label:
+            nodes[0][1] ^ nodes[1][1]
+            for i in range(1, self.pos_label):
+                nodes[i][2] ^ nodes[i + 1][1]
+            nodes[self.pos_label][2] ^ output_node[0]
+            output_node[1] ^ nodes[self.pos_label + 1][1]
+            for i in range(self.pos_label + 1, self.dimvec - 1):
+                nodes[i][2] ^ nodes[i + 1][1]
+        else:
+            nodes[0][1] ^ nodes[1][1]
+            for i in range(1, self.dimvec-1):
+                nodes[i][2] ^ nodes[i + 1][1]
 
-        final_node = tn.contractors.auto(nodes + input_nodes,
-                                         output_edge_order=[nodes[self.pos_label][3]])
+        final_node = tn.contractors.auto(nodes + input_nodes + [output_node],
+                                         output_edge_order=[output_node[2]
+                                                            if self.isolated_label
+                                                            else nodes[self.pos_label][3]])
         return final_node.tensor
 
     def call(self, inputs):
@@ -109,7 +130,7 @@ if __name__ == '__main__':
     nbdata = 70000
 
     # training and CV parameters
-    nb_epochs = 10
+    nb_epochs = 2
     cv_fold = 5
     batch_size = 10
     std = 1e-4
