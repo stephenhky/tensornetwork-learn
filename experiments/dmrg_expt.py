@@ -72,10 +72,12 @@ class QuantumDMRGLayer(tf.keras.layers.Layer):
             for i in range(1, self.dimvec-1):
                 nodes[i][2] ^ nodes[i + 1][1]
 
-        final_node = tn.contractors.auto(nodes + input_nodes + [output_node],
-                                         output_edge_order=[output_node[2]
-                                                            if self.isolated_label
-                                                            else nodes[self.pos_label][3]])
+        if self.isolated_label:
+            final_node = tn.contractors.auto(nodes + input_nodes + [output_node],
+                                             output_edge_order=[output_node[2]])
+        else:
+            final_node = tn.contractors.auto(nodes + input_nodes,
+                                             output_edge_order=[nodes[self.pos_label][3]])
         return final_node.tensor
 
     def call(self, inputs):
