@@ -133,10 +133,11 @@ if __name__ == '__main__':
     nbdata = 70000
 
     # training and CV parameters
-    nb_epochs = 2
+    nb_epochs = 4
     cv_fold = 5
     batch_size = 10
     std = 1e-4
+    learning_rate = 1e-2
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
@@ -163,7 +164,7 @@ if __name__ == '__main__':
 
         # Initializing Keras model
         print('Initializing Keras model...')
-        optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
         quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, optimizer=optimizer)
 
         print(quantum_dmrg_model.summary())
