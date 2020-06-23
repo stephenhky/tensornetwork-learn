@@ -137,7 +137,7 @@ if __name__ == '__main__':
     cv_fold = 5
     batch_size = 10
     std = 1e-4
-    learning_rate = 1e-2
+    learning_rate = 5e-4
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
