@@ -153,11 +153,11 @@ if __name__ == '__main__':
     nbdata = 70000
 
     # training and CV parameters
-    nb_epochs = 20
+    nb_epochs = 100
     cv_fold = 5
     batch_size = 100
     std = 1e-4
-    learning_rate = 1e-4
+    learning_rate = 1e-3
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
