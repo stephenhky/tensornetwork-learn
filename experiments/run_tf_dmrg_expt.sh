@@ -1,7 +1,8 @@
 #!/bin/bash
 
-#SBATCH --output=tf_dmrg_output.txt
-#SBATCH --error=tf_dmrg_error.txt
+
+#SBATCH --output=$HOME/tf_dmrg_output_$SLURM_JOB_ID.log
+#SBATCH --error=$HOME/tf_dmrg_error_$SLURM_JOB_ID.log
 #SBATCH --mem=10g
 #SBATCH --cpus-per-task=8
 

@@ -118,10 +118,30 @@ def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9, 
                          nblabels=nblabels,
                          bond_len=bond_len,
                          nearzero_std=nearzero_std),
-        # tf.keras.layers.Softmax()
+        # tf.keras.layers.LayerNormalization(beta_initializer='RandomUniform', gamma_initializer='RandomUniform', beta_constraint='non_neg')
+        tf.keras.layers.LayerNormalization(beta_initializer='RandomUniform',
+                                           gamma_initializer='RandomUniform'),
+        tf.keras.layers.Softmax()
     ])
     quantum_dmrg_model.compile(optimizer=optimizer, loss=tf.keras.losses.CategoricalCrossentropy())
     return quantum_dmrg_model
+
+
+def DenseTNKerasModel(dimvec, hidden_dim, nblabels, bond_len, nearzero_std=1e-9, optimizer='adam'):
+    tn_model = tf.keras.Sequential([
+        tf.keras.Input(shape=(dimvec, 2)),
+        tf.keras.layers.Reshape((dimvec*2,)),
+        tf.keras.layers.Dense(hidden_dim*2, activation=None),
+        tf.keras.layers.Reshape((hidden_dim, 2)),
+        QuantumDMRGLayer(dimvec=hidden_dim,
+                         pos_label=hidden_dim // 2,
+                         nblabels=nblabels,
+                         bond_len=bond_len,
+                         nearzero_std=nearzero_std),
+        tf.keras.layers.Softmax()
+    ])
+    tn_model.compile(optimizer=optimizer, loss=tf.keras.losses.CategoricalCrossentropy())
+    return tn_model
 
 
 if __name__ == '__main__':
@@ -133,11 +153,11 @@ if __name__ == '__main__':
     nbdata = 70000
 
     # training and CV parameters
-    nb_epochs = 4
+    nb_epochs = 20
     cv_fold = 5
-    batch_size = 10
+    batch_size = 100
     std = 1e-4
-    learning_rate = 5e-4
+    learning_rate = 1e-4
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
