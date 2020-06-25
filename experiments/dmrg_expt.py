@@ -147,12 +147,15 @@ def get_argparser():
     argparser.add_argument('--cv_fold', type=int, default=5, help='number of cross-validation folds')
     argparser.add_argument('--pos_label', type=int, default=392, help='position of label node')
     argparser.add_argument('--std', type=float, default=1e-4, help='near zero initialization matrix noise')
+    argparser.add_argument('--output_file', default=None, help='output log')
     return argparser
 
 
 if __name__ == '__main__':
     argparser = get_argparser()
     args = argparser.parse_args()
+
+    outputfilename = args.output_file
 
     # model parameters
     dimvec = 784
@@ -168,14 +171,20 @@ if __name__ == '__main__':
     std = args.std
     learning_rate = args.learning_rate
 
-    print('Number of pixels: {}'.format(dimvec))
-    print('Position of label node: {}'.format(pos_label))
-    print('Number of labels: {}'.format(nblabels))
-    print('Bond length: {}'.format(bond_len))
-    print('Number of epochs: {}'.format(nb_epochs))
-    print('Batch size: {}'.format(batch_size))
-    print('Noise: {}'.format(std))
-    print('Learning rate of Adam optimizer: {}'.format(learning_rate))
+    # printing out
+    strtoprint = 'Number of pixels: {}\n'.format(dimvec) + \
+                 'Position of label node: {}\n'.format(pos_label) + \
+                 'Number of labels: {}\n'.format(nblabels) + \
+                 'Bond length: {}\n'.format(bond_len) + \
+                 'Number of epochs: {}\n'.format(nb_epochs) + \
+                 'Batch size: {}\n'.format(batch_size) + \
+                 'Noise: {}\n'.format(std) + \
+                 'Learning rate of Adam optimizer: {}\n'.format(learning_rate)
+    print(strtoprint)
+    if outputfilename is not None:
+        outputfile = open(outputfilename, 'w')
+        outputfile.write(strtoprint)
+        outputfile.close()
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
@@ -189,9 +198,17 @@ if __name__ == '__main__':
         Y[i, label_dict[label]] = 1.
 
     # cross_validation
+    if outputfilename is not None:
+        with open(outputfilename, 'a') as outputfile:
+            outputfile.write('Cross-Validation\n')
+            outputfile.write('================\n')
+
     accuracies = []
     for cv_idx in range(cv_fold):
         print('Round {}'.format(cv_idx))
+        if outputfilename is not None:
+            with open(outputfilename, 'a') as outputfile:
+                outputfile.write('Round {}\n'.format(cv_idx))
         trainX = X[cv_labels!=cv_idx, :, :]
         trainY = Y[cv_labels!=cv_idx, :]
         testX = X[cv_labels==cv_idx, :, :]
@@ -199,6 +216,10 @@ if __name__ == '__main__':
 
         print('Number of training data: {}'.format(trainX.shape[0]))
         print('Number of test data: {}'.format(testX.shape[0]))
+        if outputfilename is not None:
+            with open(outputfilename, 'a') as outputfile:
+                outputfile.write('Number of training data: {}\n'.format(trainX.shape[0]))
+                outputfile.write('Number of test data: {}\n'.format(testX.shape[0]))
 
         # Initializing Keras model
         print('Initializing Keras model...')
@@ -208,6 +229,9 @@ if __name__ == '__main__':
                                                nearzero_std=std)
 
         print(quantum_dmrg_model.summary())
+        if outputfilename is not None:
+            with open(outputfilename, 'a') as outputfile:
+                outputfile.write(quantum_dmrg_model.summary()+'\n')
 
         # Training
         print('Training')
@@ -221,7 +245,17 @@ if __name__ == '__main__':
         nbmatches = np.sum(np.argmax(testY, axis=1) == np.argmax(predictedY, axis=1))
         print('Number of matches = {}'.format(nbmatches))
         print('Accuracy = {:.2f}%'.format(nbmatches/nbdata*100))
+        if outputfilename is not None:
+            with open(outputfilename, 'a') as outputfile:
+                outputfile.write('Cross-Validation Result\n')
+                outputfile.write('Cross-entropy = {}\n'.format(cross_entropy))
+                outputfile.write('Number of matches = {}\n'.format(nbmatches))
+                outputfile.write('Accuracy = {:.2f}%\n'.format(nbmatches/nbdata*100))
+                outputfile.write('\n')
 
         accuracies.append(nbmatches/nbdata)
 
     print('Average accuracy = {:.2f}%'.format(np.mean(accuracies)*100))
+    if outputfilename is not None:
+        with open(outputfilename, 'a') as outputfile:
+            outputfile.write('Average accuracy = {:.2f}%\n'.format(np.mean(accuracies) * 100))
