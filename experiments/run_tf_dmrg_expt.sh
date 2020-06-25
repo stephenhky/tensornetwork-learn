@@ -12,5 +12,5 @@ BATCH_SIZE=$3
 LEARNING_RATE=$4
 OUTPUT_FILE=$5
 
-srun python3 dmrg_expt.py $BOND_LEN $NB_EPOCHS $BATCH_SIZE $LEARNING_RATE --outputfile $OUTPUT_FILE
+srun python3 dmrg_expt.py $BOND_LEN $NB_EPOCHS $BATCH_SIZE $LEARNING_RATE --output_file $OUTPUT_FILE
 
