@@ -1,5 +1,6 @@
 
 import json
+import argparse
 
 import numpy as np
 import numba
@@ -103,13 +104,6 @@ def convert_pixels_to_tnvector(pixels):
     return tnvector
 
 
-def convert_pixels(datum):
-    # datum['pixels'] = [list(l) for l in convert_pixels_to_tnvector(np.array([datum['pixels']]))]
-    for i, pixel in enumerate(convert_pixels_to_tnvector(np.array([datum['pixels']]))):
-        datum['pixel{}'.format(i)] = list(pixel)
-    return datum
-
-
 def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9, optimizer='adam'):
     quantum_dmrg_model = tf.keras.Sequential([
         tf.keras.Input(shape=(dimvec, 2)),
@@ -118,7 +112,6 @@ def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9, 
                          nblabels=nblabels,
                          bond_len=bond_len,
                          nearzero_std=nearzero_std),
-        # tf.keras.layers.LayerNormalization(beta_initializer='RandomUniform', gamma_initializer='RandomUniform', beta_constraint='non_neg')
         tf.keras.layers.LayerNormalization(beta_initializer='RandomUniform',
                                            gamma_initializer='RandomUniform'),
         tf.keras.layers.Softmax()
@@ -127,6 +120,7 @@ def QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, nearzero_std=1e-9, 
     return quantum_dmrg_model
 
 
+# Not used.
 def DenseTNKerasModel(dimvec, hidden_dim, nblabels, bond_len, nearzero_std=1e-9, optimizer='adam'):
     tn_model = tf.keras.Sequential([
         tf.keras.Input(shape=(dimvec, 2)),
@@ -144,20 +138,44 @@ def DenseTNKerasModel(dimvec, hidden_dim, nblabels, bond_len, nearzero_std=1e-9,
     return tn_model
 
 
+def get_argparser():
+    argparser = argparse.ArgumentParser(description='Testing Quantum Tensor Network Model')
+    argparser.add_argument('bond_len', type=int, help='bond length')
+    argparser.add_argument('nb_epochs', type=int, help='number of epochs')
+    argparser.add_argument('batch_size', type=int, help='batch size')
+    argparser.add_argument('learning_rate', type=float, help='learning rate of Adam optimizer')
+    argparser.add_argument('--cv_fold', type=int, default=5, help='number of cross-validation folds')
+    argparser.add_argument('--pos_label', type=int, default=382, help='position of label node')
+    argparser.add_argument('--std', type=float, default=1e-4, help='near zero initialization matrix noise')
+    return argparser
+
+
 if __name__ == '__main__':
+    argparser = get_argparser()
+    args = argparser.parse_args()
+
     # model parameters
     dimvec = 784
-    pos_label = 392
+    pos_label = args.pos_label
     nblabels = 10
-    bond_len = 10
+    bond_len = args.bond_len
     nbdata = 70000
 
     # training and CV parameters
-    nb_epochs = 20
-    cv_fold = 5
-    batch_size = 1000
-    std = 1e-4
-    learning_rate = 5e-3
+    nb_epochs = args.nb_epochs
+    cv_fold = args.cv_fold
+    batch_size = args.batch_size
+    std = args.std
+    learning_rate = args.learning_rate
+
+    print('Number of pixels: {}'.format(dimvec))
+    print('Position of label node: {}'.format(pos_label))
+    print('Number of labels: {}'.format(nblabels))
+    print('Bond length: {}'.format(bond_len))
+    print('Number of epochs: {}'.format(nb_epochs))
+    print('Batch size: {}'.format(batch_size))
+    print('Noise: {}'.format(std))
+    print('Learning rate of Adam optimizer: {}'.format(learning_rate))
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
@@ -185,7 +203,9 @@ if __name__ == '__main__':
         # Initializing Keras model
         print('Initializing Keras model...')
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len, optimizer=optimizer)
+        quantum_dmrg_model = QuantumKerasModel(dimvec, pos_label, nblabels, bond_len,
+                                               optimizer=optimizer,
+                                               nearzero_std=std)
 
         print(quantum_dmrg_model.summary())
 
@@ -196,7 +216,7 @@ if __name__ == '__main__':
         # Testing
         print('Testing')
         predictedY = quantum_dmrg_model.predict(testX)
-        cross_entropy = - np.sum(testY*np.log(predictedY), axis=1)
+        cross_entropy = - np.mean(np.sum(testY*np.log(predictedY), axis=1))
         print('Cross-entropy = {}'.format(cross_entropy))
         nbmatches = np.sum(np.argmax(testY, axis=1) == np.argmax(predictedY, axis=1))
         print('Number of matches = {}'.format(nbmatches))
