@@ -1,4 +1,5 @@
 
+import io
 import json
 import argparse
 
@@ -138,6 +139,15 @@ def DenseTNKerasModel(dimvec, hidden_dim, nblabels, bond_len, nearzero_std=1e-9,
     return tn_model
 
 
+# From: https://stackoverflow.com/questions/41665799/keras-model-summary-object-to-string
+def get_keras_model_summary(model):
+    stream = io.StringIO()
+    model.summary(print_fn=lambda x: stream.write(x + '\n'))
+    summary_string = stream.getvalue()
+    stream.close()
+    return summary_string
+
+
 def get_argparser():
     argparser = argparse.ArgumentParser(description='Testing Quantum Tensor Network Model')
     argparser.add_argument('bond_len', type=int, help='bond length')
@@ -231,7 +241,8 @@ if __name__ == '__main__':
         print(quantum_dmrg_model.summary())
         if outputfilename is not None:
             with open(outputfilename, 'a') as outputfile:
-                outputfile.write(quantum_dmrg_model.summary()+'\n')
+                model_summary = get_keras_model_summary(quantum_dmrg_model)
+                outputfile.write(model_summary+'\n')
 
         # Training
         print('Training')
