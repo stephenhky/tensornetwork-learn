@@ -145,7 +145,7 @@ def get_argparser():
     argparser.add_argument('batch_size', type=int, help='batch size')
     argparser.add_argument('learning_rate', type=float, help='learning rate of Adam optimizer')
     argparser.add_argument('--cv_fold', type=int, default=5, help='number of cross-validation folds')
-    argparser.add_argument('--pos_label', type=int, default=382, help='position of label node')
+    argparser.add_argument('--pos_label', type=int, default=392, help='position of label node')
     argparser.add_argument('--std', type=float, default=1e-4, help='near zero initialization matrix noise')
     return argparser
 
