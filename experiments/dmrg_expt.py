@@ -2,6 +2,7 @@
 import io
 import json
 import argparse
+import time
 
 import numpy as np
 import numba
@@ -182,19 +183,23 @@ if __name__ == '__main__':
     learning_rate = args.learning_rate
 
     # printing out
-    strtoprint = 'Number of pixels: {}\n'.format(dimvec) + \
+    hypparam_strtoprint = 'Number of pixels: {}\n'.format(dimvec) + \
                  'Position of label node: {}\n'.format(pos_label) + \
                  'Number of labels: {}\n'.format(nblabels) + \
                  'Bond length: {}\n'.format(bond_len) + \
                  'Number of epochs: {}\n'.format(nb_epochs) + \
                  'Batch size: {}\n'.format(batch_size) + \
                  'Noise: {}\n'.format(std) + \
-                 'Learning rate of Adam optimizer: {}\n'.format(learning_rate)
-    print(strtoprint)
+                 'Learning rate of Adam optimizer: {}\n'.format(learning_rate) + \
+                 'Number of GPUs available: {}\n'.format(len(tf.config.list_physical_devices('GPU')))
+    print(hypparam_strtoprint)
     if outputfilename is not None:
         outputfile = open(outputfilename, 'w')
-        outputfile.write(strtoprint)
+        outputfile.write(hypparam_strtoprint)
         outputfile.close()
+
+    # Time start
+    starttime = time.time()
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
@@ -207,6 +212,8 @@ if __name__ == '__main__':
         X[i, :, :] = convert_pixels_to_tnvector(pixels)
         Y[i, label_dict[label]] = 1.
 
+    endreaddata_time = time.time()
+
     # cross_validation
     if outputfilename is not None:
         with open(outputfilename, 'a') as outputfile:
@@ -214,6 +221,7 @@ if __name__ == '__main__':
             outputfile.write('================\n')
 
     accuracies = []
+    cv_time_records = [time.time()]
     for cv_idx in range(cv_fold):
         print('Round {}'.format(cv_idx))
         if outputfilename is not None:
@@ -265,8 +273,26 @@ if __name__ == '__main__':
                 outputfile.write('\n')
 
         accuracies.append(nbmatches/nbdata)
+        cv_time_records.append(time.time())
 
+    endtime = time.time()
+
+    # Timer calculation
+    total_runtime = endtime - starttime
+    dataread_time = endreaddata_time - starttime
+    cv_times = [cv_time_records[i+1]-cv_time_records[i] for i in range(cv_fold)]
+    times_strtoprint = 'Total runtime: {:.1f} sec\n'.format(total_runtime) + \
+        'Time elapsed in data loading: {:.1f} sec\n'.format(dataread_time) + \
+        '\n'.join(['\tTime for cross-validation {}: {:.1f} sec'.format(i, cv_times[i])
+                   for i in range(cv_fold)]) + \
+        '\n'
+
+    print(times_strtoprint+'\n')
     print('Average accuracy = {:.2f}%'.format(np.mean(accuracies)*100))
     if outputfilename is not None:
         with open(outputfilename, 'a') as outputfile:
+            outputfile.write('\nOverall Result\n')
+            outputfile.write('===============\n')
+            outputfile.write(hypparam_strtoprint)
+            outputfile.write(times_strtoprint)
             outputfile.write('Average accuracy = {:.2f}%\n'.format(np.mean(accuracies) * 100))
