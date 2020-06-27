@@ -1,0 +1,9 @@
+Number of pixels: 784
+Position of label node: 392
+Number of labels: 10
+Bond length: 10
+Number of epochs: 20
+Batch size: 100
+Noise: 0.1
+Learning rate of Adam optimizer: 0.001
+Number of GPUs available: 0
