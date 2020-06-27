@@ -1,7 +1,7 @@
-2020-06-25 10:24:07.589547: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2020-06-25 10:24:07.589593: E tensorflow/stream_executor/cuda/cuda_driver.cc:351] failed call to cuInit: UNKNOWN ERROR (303)
-2020-06-25 10:24:07.589622: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (cn3114): /proc/driver/nvidia/version does not exist
-2020-06-25 10:24:07.589928: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
-2020-06-25 10:24:07.598781: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2394465000 Hz
-2020-06-25 10:24:07.599194: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x555559364f30 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
-2020-06-25 10:24:07.599215: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-06-25 14:08:24.980255: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2
+2020-06-25 14:08:25.025298: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2266750000 Hz
+2020-06-25 14:08:25.046390: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x560dda8a2f00 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-25 14:08:25.046498: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-06-25 14:08:25.046865: I tensorflow/core/common_runtime/process_util.cc:147] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+/home/hok/anaconda3/envs/hokdev/lib/python3.7/site-packages/numba/core/cpu.py:77: UserWarning: Numba extension module 'numba_scipy' failed to load due to 'ValueError(No function '__pyx_fuse_0pdtr' found in __pyx_capi__ of 'scipy.special.cython_special')'.
+  numba.core.entrypoints.init_all()
