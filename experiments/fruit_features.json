@@ -3,9 +3,9 @@
     "radius",
     "weight"
   ],
-  "binary": {
+  "binary": [
     "ripe"
-  },
+  ],
   "qualitative": [
     "color",
     "shape"

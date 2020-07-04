@@ -1,4 +1,5 @@
 
+import io
 import json
 import argparse
 from collections import defaultdict
@@ -6,7 +7,7 @@ from collections import defaultdict
 import numpy as np
 import tensornetwork as tn
 import tensorflow as tf
-# from tqdm import tqdm
+from tqdm import tqdm
 from scipy.sparse import dok_matrix
 
 
@@ -55,6 +56,15 @@ def get_tn_keras_model(fmap, lmap, learning_rate=1e-4):
     tn_model.compile(optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
                      loss=tf.keras.losses.CategoricalCrossentropy())
     return tn_model
+
+
+# From: https://stackoverflow.com/questions/41665799/keras-model-summary-object-to-string
+def get_keras_model_summary(model):
+    stream = io.StringIO()
+    model.summary(print_fn=lambda x: stream.write(x + '\n'))
+    summary_string = stream.getvalue()
+    stream.close()
+    return summary_string
 
 
 ###### Data processing ######
@@ -108,7 +118,9 @@ def get_feature_summary(alldata, features):
     return summary
 
 
-def transform_data_to_featurevector(alldata, features, feature_summary):
+def transform_data_to_featurevector(data_iterator, features, feature_summary):
+    alldata = [datum for datum in data_iterator]
+
     # mapping
     feature_map = {}
     label_map = {}
@@ -125,7 +137,9 @@ def transform_data_to_featurevector(alldata, features, feature_summary):
 
     feature_matrix = dok_matrix((len(alldata), len(feature_map)))
     label_matrix = dok_matrix((len(alldata), len(label_map)))
-    for i, datum in enumerate(alldata):
+    print('Parsing data')
+    for i in tqdm(range(len(alldata))):
+        datum = alldata[i]
         for feature in features['quantitative']:
             val = datum.get(feature)
             z_val = (val - feature_summary[feature]['mean']) / feature_summary[feature][
@@ -160,6 +174,7 @@ def get_argparser():
     argparser.add_argument('--learning_rate', default=1e-4, type=float, help='learning rate of Adam optimizer')
     argparser.add_argument('--nbepochs', default=100, type=int, help='number of epochs')
     argparser.add_argument('--batch_size', default=100, type=int, help='batch size')
+    argparser.add_argument('--output_file', default=None, help='output log')
     return argparser
 
 
@@ -167,8 +182,24 @@ if __name__ == '__main__':
     argparser = get_argparser()
     args = argparser.parse_args()
 
+    # print hyperparameters
+    cvfold = args.cvfold
+    learning_rate = args.learning_rate
+    nbepochs = args.nbepochs
+    batch_size = args.batch_size
+    outputfilename = args.output_file
+    hypparam_strtoprint = 'Filepath: {}\n'.format(args.filepath) + \
+        'Number of cross-validations: {}\n'.format(cvfold) + \
+        'Learning rate for Adam optimizer: {}\n'.format(learning_rate) + \
+        'Number of epochs: {}\n'.format(nbepochs) + \
+        'Batch size: {}\n'.format(batch_size)
+    if outputfilename is not None:
+        outputfile = open(outputfilename, 'w')
+        outputfile.write(hypparam_strtoprint)
+        outputfile.close()
+
     # data processing
-    features = json.loads(args.featurefilepath, "r")
+    features = json.load(open(args.featurefilepath, "r"))
     fruit_data_iterator = parse_data(args.filepath)
     summary = get_feature_summary(fruit_data_iterator, features)
     fruit_data_iterator = parse_data(args.filepath)
@@ -178,36 +209,75 @@ if __name__ == '__main__':
 
     print('Features')
     print(features)
-    print('Labels: {}'.join(', '.join(lmap.keys())))
+    print(lmap)
     print('Number of data: {}'.format(nbdata))
+    if outputfilename is not None:
+        with open(outputfilename, 'a') as outputfile:
+            outputfile.write('Features\n')
+            outputfile.write(str(features))
+            outputfile.write('\n')
+            outputfile.write('Feature summary\n')
+            outputfile.write(str(summary))
+            outputfile.write('\n')
+            outputfile.write('Labels\n')
+            outputfile.write(str(lmap))
+            outputfile.write('\n')
+            outputfile.write('Number of data: {}\n'.format(nbdata))
 
     # cross-validation
-    cvfold = args.cvfold
-    learning_rate = args.learning_rate
-    nbepochs = args.nbepochs
-    batch_size = args.batch_size
+    print('Cross-Validation')
+    print('================')
+    if outputfilename is not None:
+        with open(outputfilename, 'a') as outputfile:
+            outputfile.write('Cross-Validation\n')
+            outputfile.write('================\n')
     accuracies = []
     cv_labels = np.random.choice(range(cvfold), size=nbdata)
     for cv_label in range(cvfold):
         # training
         trainX = X[cv_labels!=cv_label, :]
         trainY = Y[cv_labels!=cv_label, :]
+        assert trainX.shape[0] == trainY.shape[0]
+        print('Number of training data: {}'.format(trainY.shape[0]))
+        if outputfilename is not None:
+            with open(outputfilename, 'a') as outputfile:
+                outputfile.write('Number of training data: {}\n'.format(trainY.shape[0]))
 
         tn_model = get_tn_keras_model(fmap, lmap, learning_rate=learning_rate)
         print(tn_model.summary())
+        if outputfilename is not None:
+            with open(outputfilename, 'a') as outputfile:
+                model_summary = get_keras_model_summary(tn_model)
+                outputfile.write(model_summary+'\n')
 
-        tn_model.fit(X.toarray(), Y.toarray(), epochs=nbepochs, batch_size=batch_size)
+        tn_model.fit(trainX.toarray(), trainY.toarray(), epochs=nbepochs, batch_size=batch_size)
 
         # test
         testX = X[cv_labels==cv_label, :]
         testY = Y[cv_labels==cv_label, :]
-        predY = tn_model.predict_proba(testX)
-        cross_entropy = - np.mean(np.sum(testY*np.log(predY), axis=1))
+        assert testX.shape[0] == testY.shape[0]
+        print('Number of test data: {}'.format(testY.shape[0]))
+        predY = tn_model.predict_proba(testX.toarray())
+        cross_entropy = - np.mean(np.sum(testY.toarray()*np.log(predY), axis=1))
         print('Cross-entropy = {}'.format(cross_entropy))
-        nbmatches = np.sum(np.argmax(testY, axis=1) == np.argmax(predY, axis=1))
+        nbmatches = np.sum(np.argmax(testY.toarray(), axis=1) == np.argmax(predY, axis=1))
         print('Number of matches = {}'.format(nbmatches))
         accuracy = nbmatches / testY.shape[0]
         print('Accuracy = {:.2f}%'.format(accuracy * 100))
         accuracies.append(accuracy)
 
+        if outputfilename is not None:
+            with open(outputfilename, 'a') as outputfile:
+                outputfile.write('Number of test data: {}\n'.format(testY.shape[0]))
+                outputfile.write('Cross-entropy = {}\n'.format(cross_entropy))
+                outputfile.write('Number of matches = {}\n'.format(nbmatches))
+                outputfile.write('Accuracy = {:.2f}%\n'.format(accuracy * 100))
+
+    print('\nFinal Results')
+    print('--------------')
     print('Average accuracy = {:.2f}%'.format(np.mean(accuracies)*100))
+    if outputfilename is not None:
+        with open(outputfilename, 'a') as outputfile:
+            outputfile.write('\nFinal Results\n')
+            outputfile.write('--------------\n')
+            outputfile.write('Average accuracy = {:.2f}%\n'.format(np.mean(accuracies) * 100))
