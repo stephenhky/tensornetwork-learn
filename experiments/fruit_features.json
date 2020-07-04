@@ -1,0 +1,14 @@
+{
+  "quantitative": [
+    "radius",
+    "weight"
+  ],
+  "binary": {
+    "ripe"
+  },
+  "qualitative": [
+    "color",
+    "shape"
+  ],
+  "target": "fruit"
+}
