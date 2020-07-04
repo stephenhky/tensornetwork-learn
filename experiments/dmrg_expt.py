@@ -263,13 +263,13 @@ if __name__ == '__main__':
         print('Cross-entropy = {}'.format(cross_entropy))
         nbmatches = np.sum(np.argmax(testY, axis=1) == np.argmax(predictedY, axis=1))
         print('Number of matches = {}'.format(nbmatches))
-        print('Accuracy = {:.2f}%'.format(nbmatches/nbdata*100))
+        print('Accuracy = {:.2f}%'.format(nbmatches/testX.shape[0]*100))
         if outputfilename is not None:
             with open(outputfilename, 'a') as outputfile:
                 outputfile.write('Cross-Validation Result\n')
                 outputfile.write('Cross-entropy = {}\n'.format(cross_entropy))
                 outputfile.write('Number of matches = {}\n'.format(nbmatches))
-                outputfile.write('Accuracy = {:.2f}%\n'.format(nbmatches/nbdata*100))
+                outputfile.write('Accuracy = {:.2f}%\n'.format(nbmatches/testX.shape[0]*100))
                 outputfile.write('\n')
 
         accuracies.append(nbmatches/nbdata)
