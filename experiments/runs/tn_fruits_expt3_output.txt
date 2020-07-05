@@ -1,0 +1,108 @@
+Filepath: fruits/fruits.json
+Number of cross-validations: 5
+Learning rate for Adam optimizer: 0.0001
+Number of epochs: 1000
+Batch size: 100
+Features
+{'quantitative': ['radius', 'weight'], 'binary': ['ripe'], 'qualitative': ['color', 'shape'], 'target': 'fruit'}
+Feature summary
+{'radius': {'sum': 76379.23975061919, 'sqsum': 693322.2461729473, 'nbdata': 10000, 'mean': 7.637923975061919, 'std': 3.315771700293773}, 'weight': {'sum': 78789.08456281094, 'sqsum': 828858.7404278342, 'nbdata': 10000, 'mean': 7.878908456281094, 'std': 4.561652724652075}, 'ripe': {True: 1421, False: 8579}, 'color': {'green': 6195, 'red': 3805}, 'fruit': {'orange': 4008, 'durion': 2084, 'apple': 3908}, 'shape': {'circle': 2144, 'apple': 3580, 'ellipse': 4276}}
+Labels
+{'orange': 0, 'durion': 1, 'apple': 2}
+Number of data: 10000
+Cross-Validation
+================
+Number of training data: 8046
+Model: "sequential"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_tn_layer (QuantumTNL (None, 3)                 30        
+_________________________________________________________________
+softmax (Softmax)            (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 1954
+Cross-entropy = 0.39237498979466234
+Number of matches = 1545
+Accuracy = 79.07%
+Number of training data: 7997
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_tn_layer_1 (QuantumT (None, 3)                 30        
+_________________________________________________________________
+softmax_1 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 2003
+Cross-entropy = 0.41637109415958057
+Number of matches = 1552
+Accuracy = 77.48%
+Number of training data: 7966
+Model: "sequential_2"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_tn_layer_2 (QuantumT (None, 3)                 30        
+_________________________________________________________________
+softmax_2 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 2034
+Cross-entropy = 0.39992478919605245
+Number of matches = 1606
+Accuracy = 78.96%
+Number of training data: 7986
+Model: "sequential_3"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_tn_layer_3 (QuantumT (None, 3)                 30        
+_________________________________________________________________
+softmax_3 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 2014
+Cross-entropy = 0.3886188990842163
+Number of matches = 1615
+Accuracy = 80.19%
+Number of training data: 8005
+Model: "sequential_4"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_tn_layer_4 (QuantumT (None, 3)                 30        
+_________________________________________________________________
+softmax_4 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 1995
+Cross-entropy = 0.3890608374627412
+Number of matches = 1590
+Accuracy = 79.70%
+
+Final Results
+--------------
+Average accuracy = 79.08%
