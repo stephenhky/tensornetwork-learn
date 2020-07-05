@@ -272,7 +272,7 @@ if __name__ == '__main__':
                 outputfile.write('Accuracy = {:.2f}%\n'.format(nbmatches/testX.shape[0]*100))
                 outputfile.write('\n')
 
-        accuracies.append(nbmatches/nbdata)
+        accuracies.append(nbmatches/testX.shape[0])
         cv_time_records.append(time.time())
 
     endtime = time.time()
