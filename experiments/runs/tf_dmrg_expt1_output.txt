@@ -1,0 +1,98 @@
+Number of pixels: 784
+Position of label node: 392
+Number of labels: 10
+Bond length: 10
+Number of epochs: 20
+Batch size: 100
+Noise: 0.0001
+Learning rate of Adam optimizer: 0.01
+Number of GPUs available: 0
+Cross-Validation
+================
+Round 0
+Number of training data: 56037
+Number of test data: 13963
+Model: "sequential"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_dmrg_layer (QuantumD (None, 10)                157440    
+_________________________________________________________________
+layer_normalization (LayerNo (None, 10)                20        
+_________________________________________________________________
+softmax (Softmax)            (None, 10)                0         
+=================================================================
+Total params: 157,460
+Trainable params: 157,460
+Non-trainable params: 0
+_________________________________________________________________
+
+Cross-Validation Result
+Cross-entropy = 2.3022872215610586
+Number of matches = 1536
+Accuracy = 11.00%
+
+Round 1
+Number of training data: 55904
+Number of test data: 14096
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_dmrg_layer_1 (Quantu (None, 10)                157440    
+_________________________________________________________________
+layer_normalization_1 (Layer (None, 10)                20        
+_________________________________________________________________
+softmax_1 (Softmax)          (None, 10)                0         
+=================================================================
+Total params: 157,460
+Trainable params: 157,460
+Non-trainable params: 0
+_________________________________________________________________
+
+Cross-Validation Result
+Cross-entropy = 2.3022244465574366
+Number of matches = 1587
+Accuracy = 11.26%
+
+Round 2
+Number of training data: 56036
+Number of test data: 13964
+Model: "sequential_2"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_dmrg_layer_2 (Quantu (None, 10)                157440    
+_________________________________________________________________
+layer_normalization_2 (Layer (None, 10)                20        
+_________________________________________________________________
+softmax_2 (Softmax)          (None, 10)                0         
+=================================================================
+Total params: 157,460
+Trainable params: 157,460
+Non-trainable params: 0
+_________________________________________________________________
+
+Cross-Validation Result
+Cross-entropy = 2.3020125862965437
+Number of matches = 1564
+Accuracy = 11.20%
+
+Round 3
+Number of training data: 55915
+Number of test data: 14085
+Model: "sequential_3"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+quantum_dmrg_layer_3 (Quantu (None, 10)                157440    
+_________________________________________________________________
+layer_normalization_3 (Layer (None, 10)                20        
+_________________________________________________________________
+softmax_3 (Softmax)          (None, 10)                0         
+=================================================================
+Total params: 157,460
+Trainable params: 157,460
+Non-trainable params: 0
+_________________________________________________________________
+

@@ -1,0 +1,10 @@
+2020-07-04 19:22:45.314762: W tensorflow/stream_executor/platform/default/dso_loader.cc:55] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2020-07-04 19:22:45.314812: E tensorflow/stream_executor/cuda/cuda_driver.cc:351] failed call to cuInit: UNKNOWN ERROR (303)
+2020-07-04 19:22:45.314842: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (cn3331): /proc/driver/nvidia/version does not exist
+2020-07-04 19:22:58.793009: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2020-07-04 19:22:58.806336: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2394345000 Hz
+2020-07-04 19:22:58.806843: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x555559363540 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-07-04 19:22:58.806867: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+slurmstepd: error: *** JOB 60660647 ON cn3331 CANCELLED AT 2020-07-04T21:22:46 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 60660647.0 ON cn3331 CANCELLED AT 2020-07-04T21:22:46 DUE TO TIME LIMIT ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
