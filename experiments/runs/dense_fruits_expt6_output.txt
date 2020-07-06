@@ -27,3 +27,83 @@ Trainable params: 30
 Non-trainable params: 0
 _________________________________________________________________
 
+Number of test data: 1921
+Cross-entropy = 0.4060790593496841
+Number of matches = 1506
+Accuracy = 78.40%
+Number of training data: 8035
+Model: "sequential_1"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_1 (Dense)              (None, 3)                 30        
+_________________________________________________________________
+softmax_1 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 1965
+Cross-entropy = 0.39022587785333257
+Number of matches = 1553
+Accuracy = 79.03%
+Number of training data: 7980
+Model: "sequential_2"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_2 (Dense)              (None, 3)                 30        
+_________________________________________________________________
+softmax_2 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 2020
+Cross-entropy = 0.3887466822641357
+Number of matches = 1608
+Accuracy = 79.60%
+Number of training data: 7975
+Model: "sequential_3"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_3 (Dense)              (None, 3)                 30        
+_________________________________________________________________
+softmax_3 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 2025
+Cross-entropy = 0.38890518419220577
+Number of matches = 1610
+Accuracy = 79.51%
+Number of training data: 7931
+Model: "sequential_4"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+dense_4 (Dense)              (None, 3)                 30        
+_________________________________________________________________
+softmax_4 (Softmax)          (None, 3)                 0         
+=================================================================
+Total params: 30
+Trainable params: 30
+Non-trainable params: 0
+_________________________________________________________________
+
+Number of test data: 2069
+Cross-entropy = 0.40058607158943765
+Number of matches = 1635
+Accuracy = 79.02%
+
+Final Results
+--------------
+Average accuracy = 79.11%
