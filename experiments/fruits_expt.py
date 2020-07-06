@@ -58,6 +58,20 @@ def get_tn_keras_model(fmap, lmap, learning_rate=1e-4):
     return tn_model
 
 
+def get_control_keras_model(fmap, lmap, learning_rate=1e-4, nbhiddendim=[]):
+    keras_model = tf.keras.Sequential([
+        tf.keras.Input(shape=(len(fmap),))
+        ] + [
+            tf.keras.Dense(nbdim) for nbdim in nbhiddendim
+        ] + [
+            tf.keras.Dense(len(lmap)),
+            tf.keras.layers.Softmax()
+    ])
+    keras_model.compile(optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
+                        loss=tf.keras.losses.CategoricalCrossentropy())
+    return keras_model
+
+
 # From: https://stackoverflow.com/questions/41665799/keras-model-summary-object-to-string
 def get_keras_model_summary(model):
     stream = io.StringIO()
@@ -174,6 +188,8 @@ def get_argparser():
     argparser.add_argument('--learning_rate', default=1e-4, type=float, help='learning rate of Adam optimizer')
     argparser.add_argument('--nbepochs', default=100, type=int, help='number of epochs')
     argparser.add_argument('--batch_size', default=100, type=int, help='batch size')
+    argparser.add_argument('--controldense', action='store_true', default=False, help='run control with dense layers (default: False)')
+    argparser.add_argument('--layer_dims', type=str, default=None, help='hidden layers')
     argparser.add_argument('--output_file', default=None, help='output log')
     return argparser
 
@@ -187,12 +203,14 @@ if __name__ == '__main__':
     learning_rate = args.learning_rate
     nbepochs = args.nbepochs
     batch_size = args.batch_size
+    run_dense_control = args.controldense
     outputfilename = args.output_file
     hypparam_strtoprint = 'Filepath: {}\n'.format(args.filepath) + \
         'Number of cross-validations: {}\n'.format(cvfold) + \
         'Learning rate for Adam optimizer: {}\n'.format(learning_rate) + \
         'Number of epochs: {}\n'.format(nbepochs) + \
-        'Batch size: {}\n'.format(batch_size)
+        'Batch size: {}\n'.format(batch_size) + \
+        'Running control: {}\n'.format(run_dense_control)
     if outputfilename is not None:
         outputfile = open(outputfilename, 'w')
         outputfile.write(hypparam_strtoprint)
@@ -243,21 +261,29 @@ if __name__ == '__main__':
             with open(outputfilename, 'a') as outputfile:
                 outputfile.write('Number of training data: {}\n'.format(trainY.shape[0]))
 
-        tn_model = get_tn_keras_model(fmap, lmap, learning_rate=learning_rate)
-        print(tn_model.summary())
+        if not run_dense_control:
+            kmodel = get_tn_keras_model(fmap, lmap, learning_rate=learning_rate)
+        else:
+            layerdimstr = args.layer_dims
+            if layerdimstr is None:
+                layerdims = []
+            else:
+                layerdims = [int(numstr) for numstr in layerdimstr.strip().split(',')]
+            kmodel = get_control_keras_model(fmap, lmap, learning_rate=learning_rate, nbhiddendim=layerdims)
+        print(kmodel.summary())
         if outputfilename is not None:
             with open(outputfilename, 'a') as outputfile:
-                model_summary = get_keras_model_summary(tn_model)
+                model_summary = get_keras_model_summary(kmodel)
                 outputfile.write(model_summary+'\n')
 
-        tn_model.fit(trainX.toarray(), trainY.toarray(), epochs=nbepochs, batch_size=batch_size)
+        kmodel.fit(trainX.toarray(), trainY.toarray(), epochs=nbepochs, batch_size=batch_size)
 
         # test
         testX = X[cv_labels==cv_label, :]
         testY = Y[cv_labels==cv_label, :]
         assert testX.shape[0] == testY.shape[0]
         print('Number of test data: {}'.format(testY.shape[0]))
-        predY = tn_model.predict_proba(testX.toarray())
+        predY = kmodel.predict_proba(testX.toarray())
         cross_entropy = - np.mean(np.sum(testY.toarray()*np.log(predY), axis=1))
         print('Cross-entropy = {}'.format(cross_entropy))
         nbmatches = np.sum(np.argmax(testY.toarray(), axis=1) == np.argmax(predY, axis=1))
