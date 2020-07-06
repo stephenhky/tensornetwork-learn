@@ -62,9 +62,9 @@ def get_control_keras_model(fmap, lmap, learning_rate=1e-4, nbhiddendim=[]):
     keras_model = tf.keras.Sequential([
         tf.keras.Input(shape=(len(fmap),))
         ] + [
-            tf.keras.Dense(nbdim) for nbdim in nbhiddendim
+            tf.keras.layers.Dense(nbdim) for nbdim in nbhiddendim
         ] + [
-            tf.keras.Dense(len(lmap)),
+            tf.keras.layers.Dense(len(lmap)),
             tf.keras.layers.Softmax()
     ])
     keras_model.compile(optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
