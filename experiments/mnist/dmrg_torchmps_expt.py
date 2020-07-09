@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     # Prepare for cross-validation
     cv_labels = np.random.choice(range(cv_fold), size=nbdata)
-    dataset = MNISTJSON_Dataset('mnist_784/mnist_784.json', cv_labels)
+    dataset = MNISTJSON_Dataset('dataset/mnist_784.json', cv_labels)
 
     # cross-validation
     accuracies = []

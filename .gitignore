@@ -864,4 +864,4 @@ local.properties
 
 
 ## added by Stephen Ho
-experiments/mnist_784/*
+/experiments/mnist/dataset/mnist_784.json

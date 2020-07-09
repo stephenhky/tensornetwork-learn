@@ -208,7 +208,7 @@ if __name__ == '__main__':
     label_dict = {str(i): i for i in range(10)}
     X = np.zeros((nbdata, dimvec, 2))
     Y = np.zeros((nbdata, nblabels))
-    for i, (pixels, label) in enumerate(generate_data(open('mnist_784/mnist_784.json', 'r'))):
+    for i, (pixels, label) in enumerate(generate_data(open('dataset/mnist_784.json', 'r'))):
         X[i, :, :] = convert_pixels_to_tnvector(pixels)
         Y[i, label_dict[label]] = 1.
 

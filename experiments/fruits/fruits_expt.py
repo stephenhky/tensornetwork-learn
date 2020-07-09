@@ -1,14 +1,14 @@
 
+import argparse
 import io
 import json
-import argparse
 from collections import defaultdict
 
 import numpy as np
-import tensornetwork as tn
 import tensorflow as tf
-from tqdm import tqdm
+import tensornetwork as tn
 from scipy.sparse import dok_matrix
+from tqdm import tqdm
 
 
 ###### Keras Layer for Tensor Network ##########
