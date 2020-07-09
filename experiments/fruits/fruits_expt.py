@@ -1,4 +1,10 @@
 
+# Fruit classification, demonstrating the use of Tensor Networks in
+# a customized keras layer.
+#
+# Author: Kwan-yuet "Stephen" Ho, Ph.D.
+#
+
 import argparse
 import io
 import json
